@@ -11,7 +11,15 @@ import { ValidationPipe } from "@nestjs/common";
 dotenv.config();
 
 function validateEnv() {
-    const requiredEnvVariables = ["NODE_ENV", "PORT", "DATABASE_URL"];
+    const requiredEnvVariables = [
+        "NODE_ENV",
+        "PORT",
+        "JWT_ENCRYPT_KEY",
+        "JWT_SECRET_KEY",
+        "JWT_EXPIRATION_TIME",
+        "JWT_REFRESH_EXPIRATION_TIME",
+        "DATABASE_URL",
+    ];
     const missingVariables = requiredEnvVariables.filter((variable) => !(variable in process.env));
 
     if (missingVariables.length > 0) {

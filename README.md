@@ -60,4 +60,10 @@
 
 ### Start the Server
 
-    - Navigate to the server directory and start the server:
+    - cd server
+    - npm run start:dev
+
+### Start the Front-end
+    - cd www
+    - npm run dev
+

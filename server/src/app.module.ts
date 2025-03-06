@@ -6,6 +6,7 @@ import { ConfigModule } from "@nestjs/config";
 // Modules
 import { UserModule } from "./modules/user/user.module";
 import { AuthModule } from "./auth/auth.module";
+import { TaskModule } from "./modules/task/task.module";
 
 // Middlewares
 import { JwtTokenMiddleware } from "./auth/middleware/jwtToken.middleware";
@@ -23,6 +24,7 @@ import { JwtTokenMiddleware } from "./auth/middleware/jwtToken.middleware";
         // Modules
         AuthModule,
         UserModule,
+        TaskModule,
     ],
 })
 export class AppModule implements NestModule {

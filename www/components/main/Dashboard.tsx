@@ -57,6 +57,8 @@ export default function Dashboard(props: Props) {
 
   // Pagination
   const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(5);
+
 
   // Filters
   const [filters, setFilters] = useState<{
@@ -77,13 +79,17 @@ export default function Dashboard(props: Props) {
 	);
 
   const fetchTodos = useCallback(async () => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("page", page.toString());
+    params.set("limit", limit.toString());
+
     void api.get(`/task/all?${searchParams.toString()}`).then((res) => {
       setTodos(res.data);
     }).catch((error) => {
       console.error(error);
       toast.error("Error", { description: "Error while fetching tasks" });
     });
-  }, [searchParams]);
+  }, [searchParams, page, limit]);
 
   const handleCreateOrUpdate = async () => {
     if (!formData.description || !formData.priority || !date) {
@@ -140,6 +146,16 @@ export default function Dashboard(props: Props) {
     } catch (error) {}
   };
 
+  const handlePageChange = (newPage: number) => {
+    setPage(newPage);
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("page", newPage.toString());
+    params.set("limit", limit.toString());
+    router.push(`?${params.toString()}`, { scroll: false });
+    router.refresh();
+  };
+  
+
   const resetFilters = () => {
     setFilters({
       priority: 0,
@@ -159,6 +175,12 @@ export default function Dashboard(props: Props) {
   useEffect(() => {
     const params = new URLSearchParams(searchParams.toString());
     
+    const pageFromUrl = parseInt(params.get("page") || "1", 10);
+    const limitFromUrl = parseInt(params.get("limit") || "5", 10);
+    
+    setPage(pageFromUrl);
+    setLimit(limitFromUrl);
+
     if(filters.priority) {
       params.set("priority", filters.priority.toString());
     }else {
@@ -274,11 +296,71 @@ export default function Dashboard(props: Props) {
 
 
       {/* Pagination Controls */}
-      <div className="flex justify-between">
-        <Button onClick={() => setPage((prev) => Math.max(prev - 1, 1))} disabled={page === 1}>
+      <div className="flex justify-between items-center">
+        <Button onClick={() => handlePageChange(page - 1)} disabled={page === 1}>
           Previous
         </Button>
-        <Button onClick={() => setPage((prev) => prev + 1)} disabled={todos.length < 5}>Next</Button>
+        
+
+        <div className="flex items-center space-x-4">
+        <Select
+          label="Tasks per page"
+          value={limit.toString()}
+          onChange={(e) => {
+            const newLimit = parseInt(e.currentTarget.value, 10);
+            setLimit(newLimit);
+            setPage(1); // Reset to first page when changing limit
+            const params = new URLSearchParams(searchParams.toString());
+            params.set("limit", newLimit.toString());
+            params.set("page", "1");
+            router.push(`?${params.toString()}`, { scroll: false });
+            router.refresh();
+          }}
+          options={[
+            { value: "5", label: "5" },
+            { value: "10", label: "10" },
+            { value: "15", label: "15" },
+            { value: "20", label: "20" },
+          ]}
+        />
+
+        <Input
+          label="Page"
+          type="number"
+          value={page.toString()}
+          min="1"
+          onChange={(e) => {
+            const newPage = parseInt(e.currentTarget.value, 10);
+
+            if (isNaN(newPage) || newPage <= 0) {
+              toast.error("Invalid page", { description: "Page must be a positive number." });
+              return;
+            }
+
+            setPage(newPage);
+          }}
+          onBlur={(e) => {
+            // Ensure valid page number on blur
+            const newPage = parseInt(e.target.value, 10);
+            if (!newPage || newPage <= 0) {
+              setPage(1);
+              toast.error("Invalid input", { description: "Page reset to 1." });
+            } else {
+              const params = new URLSearchParams(searchParams.toString());
+              params.set("page", newPage.toString());
+              router.push(`?${params.toString()}`, { scroll: false });
+              router.refresh();
+            }
+          }}
+          className="w-14 appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none text-center"
+        />
+
+        </div>
+
+
+        <Button onClick={() => handlePageChange(page + 1)} disabled={todos.length < limit}>
+          Next
+        </Button>
       </div>
 
       {/* Create Task Button */}
